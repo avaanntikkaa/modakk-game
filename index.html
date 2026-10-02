@@ -179,16 +179,29 @@ ul.wishes li{margin:7px 0}
   /* ---- email delivery (Web3Forms) ----
      Get a free access key at web3forms.com (enter your email, they send you the key) and paste it below. */
   const WEB3FORMS_KEY = 'b1e804e6-2a77-4f23-acb5-b5f3b012b532';
-  async function sendMail(subject, message){
+  async function sendOnce(subject, message){
     if(!WEB3FORMS_KEY || WEB3FORMS_KEY.startsWith('PASTE')) return false;
     try{
       const r = await fetch('https://api.web3forms.com/submit', {
         method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body: JSON.stringify({ access_key: WEB3FORMS_KEY, subject, from_name:'Modakk\'s wishes', message })
+        body: JSON.stringify({ access_key: WEB3FORMS_KEY, subject, from_name:'Modakk\'s wishes', message: message + '\n\n(sent ' + new Date().toLocaleString() + ')' })
       });
       const j = await r.json();
       return !!j.success;
     }catch(e){ return false; }
+  }
+  /* send one email at a time, retry if one fails, so none get dropped */
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  let mailQueue = Promise.resolve();
+  function sendMail(subject, message){
+    mailQueue = mailQueue.then(async () => {
+      for(let a = 0; a < 4; a++){
+        if(await sendOnce(subject, message)){ await sleep(1500); return true; }
+        await sleep(2500 * (a + 1));
+      }
+      return false;
+    });
+    return mailQueue;
   }
 
   /* hide broken images, show placeholder instead */
