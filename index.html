@@ -268,7 +268,6 @@ ul.wishes li{margin:7px 0}
       const v = $('#wishText').value.trim();
       if(!v){ $('#wishToast').textContent = 'Write something first, no skipping 😜'; return; }
       wishes.push(v);
-      sendMail('💌 Wish #' + (i+1) + ' from Modakk', v);
       if(i < games.length - 1) startGame(i + 1); else showSummary();
     };
   }
